@@ -1,12 +1,11 @@
 window.onload = function () {
     addCanvas();
-    document.addEventListener('mousedown', movieClickHandler);
 };
 
 function addCanvas () {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const offset = 100;
+    const offset = 500;
 
     let canvas = document.getElementById('canvas-container');
     canvas.width =  width - offset;
@@ -16,10 +15,13 @@ function addCanvas () {
         let ctx = canvas.getContext('2d');
         showRandomRectangle(canvas, ctx)
     }
+
+    canvas.addEventListener('mousedown', canvasClickHandler);
+    canvas.addEventListener('mousemove',  canvasMouseHandler);
 }
 
 function showRandomRectangle (canvas, ctx) {
-    const rectanglesToGenerate = 4;
+    const rectanglesToGenerate = 1;
 
     for (let i = 0; i < rectanglesToGenerate; i++) {
         let {recParams, recColor} = getRandomRectangle(canvas);
@@ -38,8 +40,8 @@ function getRandomRectangle(canvas) {
 
     let positionX = Math.floor(Math.random() * canvas.width) + 1;
     let positionY = Math.floor(Math.random() * canvas.height) + 1;
-    let width = Math.floor(Math.random() * (_maxWidth - _minWidth)) + _minWidth;
-    let height =  positionY;
+    let width = Math.floor(Math.random() * (_maxWidth - positionX)) + positionX;
+    let height = Math.floor(Math.random() * (_maxHeight - _minHeight)) + _minHeight;
 
     let recParams = [positionX, positionY, width, height];
     let recColor = "#"+((1<<24)*Math.random()|0).toString(16);
@@ -53,6 +55,29 @@ function getRandomRectangle(canvas) {
 }
 
 
-function movieClickHandler (ev) {
-    console.log(ev.offsetX)
+function canvasMouseHandler (ev) {
+    // console.log(ev.layerX, ev.layerY)
+}
+
+function canvasClickHandler (ev) {
+    if (getRandomRectangle.history.length) {
+        getRandomRectangle.history.forEach(el => {
+            const mousePosition = getMousePos(ev);
+            const isSimilarHorizontalPosition = mousePosition.x > el.recParams[0] && mousePosition.x < el.recParams[0] + el.recParams[2];
+            const isSimilarVerticalPosition = mousePosition.y > el.recParams[1] && mousePosition.y < el.recParams[1] + el.recParams[3];
+            if (isSimilarHorizontalPosition && isSimilarVerticalPosition) {
+
+            }
+        })
+    }
+
+}
+
+function getMousePos(evt) {
+    let canvas = document.getElementById('canvas-container');
+    let rect = canvas.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
 }
