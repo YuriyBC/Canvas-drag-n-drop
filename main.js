@@ -1,6 +1,6 @@
 const width = window.innerWidth;
 const height = window.innerHeight;
-let container
+let container;
 
 
 window.onload = function () {
@@ -21,8 +21,6 @@ const CONSTANTS = {
     RED_COLOR: '#da3d4b'
 };
 
-
-
 function createCanvas () {
     container = document.getElementsByClassName('canvas-container')[0];
     const canvasCollection = container.getElementsByTagName('canvas');
@@ -32,11 +30,11 @@ function createCanvas () {
     canvas.id = `canvas-container-${canvasCollection.length}`;
     canvas.width = width - offset;
     canvas.height = height - offset;
-    canvas.style.position = 'absolute'
+    canvas.style.position = 'absolute';
     container.appendChild(canvas);
-    container.addEventListener('mousedown', canvasClickHandler.bind(this));
-    container.addEventListener('mouseup', canvasReleaseMouse.bind(this));
-    container.addEventListener('mousemove',  canvasMousemoveHandler.bind(this));
+    container.addEventListener('mousedown', onClickCanvas.bind(this));
+    container.addEventListener('mouseup', onMouseUp.bind(this));
+    container.addEventListener('mousemove',  onDragMove.bind(this));
 
     return canvas
 }
@@ -65,20 +63,18 @@ function showRandomRectangle (canvas, ctx) {
     rectangleCollection.add(rectangle);
 }
 
-function Rectangle (x, y, xx, yy, color, ctx) {;
+function Rectangle (x, y, xx, yy, color, ctx) {
     this.x = x;
     this.y = y;
     this.xx = xx;
     this.yy = yy;
     this.ctx = ctx;
     this.color = color;
-    this.isDraggble = false;
-    this.draggedLast = [];
     this.isCrossed = false;
+    this.isDragged = false;
+    this.lastDraggedPosition = [];
+    this.mouseOffset = [];
 
-    this.setCrossed = function (value) {
-        this.isCrossed = value
-    };
     this.print = function () {
         this.ctx.fillStyle = this.color;
         this.ctx.fillRect(this.x, this.y, this.xx, this.yy);
@@ -98,11 +94,17 @@ function Rectangle (x, y, xx, yy, color, ctx) {;
         if (!xx && !yy) {
             this.ctx.clearRect(0, 0, width, height);
             this.ctx.fillRect(x, y, this.xx, this.yy);
-            this.draggedLast = [x, y, this.xx, this.yy]
+            this.lastDraggedPosition = [x, y, this.xx, this.yy]
         }
     };
-    this.setDraggble = function (val) {
-        this.isDraggble = val
+    this.setCrossed = function (value) {
+        this.isCrossed = value
+    };
+    this.setDragProgress = function (val) {
+        this.isDragged = val
+    };
+    this.setMouseOffset = function (val) {
+        this.mouseOffset = val
     }
 }
 
@@ -115,7 +117,7 @@ function getRandomRectangle(canvas) {
 
     let positionX = Math.floor(Math.random() * canvas.width) + 1;
     let positionY = Math.floor(Math.random() * canvas.height) + 1;
-    let width = Math.floor(Math.random() * (_maxWidth - positionX)) + positionX;
+    let width = Math.floor(Math.random() * (_maxWidth - _minWidth)) + _minWidth;
     let height = Math.floor(Math.random() * (_maxHeight - _minHeight)) + _minHeight;
 
     let recParams = [positionX, positionY, width, height];
@@ -127,63 +129,7 @@ function getRandomRectangle(canvas) {
     };
 }
 
-
-function canvasMousemoveHandler (ev) {
-    const collection = rectangleCollection.get();
-    const draggableItem = collection.find(el => el.isDraggble);
-
-    if (draggableItem) {
-        let x = ev.pageX - container.offsetLeft - (draggableItem.xx / 2);
-        let y = ev.pageY - container.offsetTop - (draggableItem.yy / 2);
-        if (isPositionAllowed(x, y, draggableItem, ev)) draggableItem.transform(x, y);
-    }
-}
-
-function isPositionAllowed (potentialX, potentialY, draggableItem, ev) {
-    let offsetAllowed = 0;
-
-    const collection = rectangleCollection.get().filter(el => JSON.stringify(el) !== JSON.stringify(draggableItem) );
-    if (collection && collection.length && ev) {
-        return collection.every(el => {
-            const mousePosition = getMousePos(ev);
-            const elementPositionBeforeX = mousePosition.x + (draggableItem.xx / 2) + offsetAllowed;
-            const elementPositionAfterX = mousePosition.x - (draggableItem.xx / 2) - offsetAllowed;
-            const elementPositionBeforeY = mousePosition.y + (draggableItem.yy / 2) + offsetAllowed;
-            const elementPositionAfterY = mousePosition.y - (draggableItem.yy / 2) - offsetAllowed;
-
-            const isRectangleCrossedByX = elementPositionBeforeX > el.x && elementPositionAfterX < el.x + el.xx;
-            const isRectangleCrossedByY = elementPositionBeforeY > el.y && elementPositionAfterY < el.y + el.yy;
-
-            if (isRectangleCrossedByX && isRectangleCrossedByY) {
-                draggableItem.setCrossed(true);
-                draggableItem.setColor(CONSTANTS.RED_COLOR);
-                el.setColor(CONSTANTS.RED_COLOR);
-            }
-            return true
-        })
-    }
-}
-
-function canvasReleaseMouse () {
-    const collection = rectangleCollection.get();
-    const draggableItem = collection.find(el => el.isDraggble);
-    if (draggableItem) {
-        if (draggableItem.isCrossed) {
-            draggableItem.transform(draggableItem.x, draggableItem.y)
-        } else {
-            draggableItem.setPosition(...draggableItem.draggedLast)
-        }
-
-        draggableItem.setDraggble(false);
-        draggableItem.setCrossed(false);
-        container.style.cursor = "default";
-        collection.forEach(el => el.setColor());
-    }
-}
-
-function canvasClickHandler (ev) {
-    ev.preventDefault();
-
+function onClickCanvas (ev) {
     const collection = rectangleCollection.get();
     if (collection.length) {
         collection.forEach(el => {
@@ -192,10 +138,83 @@ function canvasClickHandler (ev) {
             const isSimilarVerticalPosition = mousePosition.y > el.y && mousePosition.y < el.y + el.yy;
             if (isSimilarHorizontalPosition && isSimilarVerticalPosition) {
                 container.style.cursor = "move";
-                el.setDraggble(true);
+                const offsetX = el.x - mousePosition.x;
+                const offsetY = el.y - mousePosition.y;
+
+                el.setMouseOffset([offsetX * -1, offsetY * -1]);
+                el.setDragProgress(true);
             }
         })
     }
+}
+
+
+function onDragMove (ev) {
+    const collection = rectangleCollection.get();
+    const draggableItem = collection.find(el => el.isDragged);
+
+    if (draggableItem) {
+        let x = ev.pageX - container.offsetLeft - draggableItem.mouseOffset[0];
+        let y = ev.pageY - container.offsetTop - draggableItem.mouseOffset[1];
+        if (isPositionAllowed(x, y, draggableItem, ev)) draggableItem.transform(x, y);
+    }
+}
+
+function onMouseUp () {
+    const collection = rectangleCollection.get();
+    const draggableItem = collection.find(el => el.isDragged);
+
+    if (draggableItem) {
+        // one click behaviour
+        if (!draggableItem.lastDraggedPosition.length) {
+            draggableItem.setDragProgress(false);
+            container.style.cursor = "default";
+            return
+        }
+        // draggable behaviour
+        if (draggableItem.isCrossed) {
+            draggableItem.transform(draggableItem.x, draggableItem.y)
+        } else {
+            draggableItem.setPosition(...draggableItem.lastDraggedPosition)
+        }
+
+        draggableItem.setDragProgress(false);
+        draggableItem.setCrossed(false);
+        container.style.cursor = "default";
+        collection.forEach(el => el.setColor());
+    }
+}
+
+function isPositionAllowed (potentialX, potentialY, draggableItem, ev) {
+    let allowedOffset = 30;
+    const collection = rectangleCollection.get().filter(el => JSON.stringify(el) !== JSON.stringify(draggableItem));
+
+    if (collection && collection.length && ev) {
+        return collection.every(el => {
+            const mousePosition = getMousePos(ev);
+            const elementPositionBeforeX = mousePosition.x + (draggableItem.xx - draggableItem.mouseOffset[0]) + allowedOffset;
+            const elementPositionAfterX = mousePosition.x - draggableItem.mouseOffset[0] - allowedOffset;
+            const elementPositionBeforeY = mousePosition.y + (draggableItem.yy - draggableItem.mouseOffset[1]) + allowedOffset;
+            const elementPositionAfterY = mousePosition.y - draggableItem.mouseOffset[1] - allowedOffset;
+
+            const isRectangleCrossedByX = elementPositionBeforeX > el.x && elementPositionAfterX < el.x + el.xx;
+            const isRectangleCrossedByY = elementPositionBeforeY > el.y && elementPositionAfterY < el.y + el.yy;
+
+            if (isRectangleCrossedByX && isRectangleCrossedByY) {
+                connectRectangle(draggableItem, el);
+                // draggableItem.setCrossed(true);
+                // draggableItem.setColor(CONSTANTS.RED_COLOR);
+                // el.setColor(CONSTANTS.RED_COLOR);
+                return false
+            }
+            return true
+        })
+    }
+}
+
+
+function connectRectangle () {
+
 }
 
 function getMousePos(evt) {
