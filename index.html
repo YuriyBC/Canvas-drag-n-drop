@@ -9,7 +9,7 @@
     <title>Canvas Drag'n'Drop</title>
 </head>
 <body>
- <canvas id="canvas-container"></canvas>
+<div class="canvas-container"></div>
 </body>
 
 
@@ -20,11 +20,13 @@
         padding: 0;
         overflow: hidden;
         background-color: #F0F0F0;
-        display: flex;
-        justify-content: center;
+        margin-top: 100px;
     }
     canvas {
         border: 4px solid black;
+    }
+    .canvas-container {
+        position: relative;
     }
 </style>
 </html>
