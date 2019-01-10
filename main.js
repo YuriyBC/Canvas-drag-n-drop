@@ -40,14 +40,13 @@ function createCanvas () {
 }
 
 function generateRectangles () {
-    const rectanglesToGenerate = 2;
+    const rectanglesToGenerate = 3;
 
     for (let i = 0; i < rectanglesToGenerate; i++) {
         const canvas = createCanvas();
         let ctx = canvas.getContext('2d');
         showRandomRectangle(canvas, ctx)
     }
-
 }
 
 function showRandomRectangle (canvas, ctx) {
@@ -95,6 +94,9 @@ function Rectangle (x, y, xx, yy, color, ctx) {
             this.ctx.clearRect(0, 0, width, height);
             this.ctx.fillRect(x, y, this.xx, this.yy);
             this.lastDraggedPosition = [x, y, this.xx, this.yy]
+        } else {
+            this.ctx.clearRect(0, 0, width, height);
+            this.ctx.fillRect(x, y, xx, yy);
         }
     };
     this.setCrossed = function (value) {
@@ -109,18 +111,24 @@ function Rectangle (x, y, xx, yy, color, ctx) {
 }
 
 function getRandomRectangle(canvas) {
-    if (!getRandomRectangle.history)  getRandomRectangle.history = [];
-    const _maxWidth = 400;
+    const offsetBetweenRectangles = 30;
+    const rectanglesBeforeLength = [...rectangleCollection.get()].length;
+    const previousRectangle = [...rectangleCollection.get()][rectanglesBeforeLength - 1];
+    const previousRectangleHeight = previousRectangle ? previousRectangle.y + previousRectangle.yy : 0;
+
+    const _maxWidth = 200;
     const _minWidth = 40;
-    const _maxHeight = 400;
+    const _maxHeight = 200;
     const _minHeight = 45;
 
     let positionX = Math.floor(Math.random() * canvas.width) + 1;
-    let positionY = Math.floor(Math.random() * canvas.height) + 1;
+    let positionY = rectanglesBeforeLength * offsetBetweenRectangles + previousRectangleHeight;
     let width = Math.floor(Math.random() * (_maxWidth - _minWidth)) + _minWidth;
     let height = Math.floor(Math.random() * (_maxHeight - _minHeight)) + _minHeight;
 
+
     let recParams = [positionX, positionY, width, height];
+    console.log(recParams )
     let recColor = "#"+((1<<24)*Math.random()|0).toString(16);
 
     return {
@@ -205,6 +213,7 @@ function isPositionAllowed (potentialX, potentialY, draggableItem, ev) {
                 // draggableItem.setCrossed(true);
                 // draggableItem.setColor(CONSTANTS.RED_COLOR);
                 // el.setColor(CONSTANTS.RED_COLOR);
+                // console.log(start, draggableItem.xx, height, draggableItem.yy, draggableItem.color)
                 return false
             }
             return true
@@ -213,8 +222,30 @@ function isPositionAllowed (potentialX, potentialY, draggableItem, ev) {
 }
 
 
-function connectRectangle () {
+function connectRectangle (draggableItem, el) {
+    let allowedOffset = 30;
+    const isLeft = el.x > draggableItem.lastDraggedPosition[0] + draggableItem.lastDraggedPosition[2];
+    const isRight = el.x + el.xx < draggableItem.lastDraggedPosition[0];
+    const isTop = draggableItem.lastDraggedPosition[1] + draggableItem.lastDraggedPosition[3] < el.y;
+    const isBottom = el.y + el.yy < draggableItem.lastDraggedPosition[1];
 
+    if (isRight) {
+        let newX = el.x + el.xx;
+        let heightDifference = draggableItem.yy - el.yy;
+        let nexY = el.y - heightDifference;
+        draggableItem.transform(newX, nexY, draggableItem.xx, draggableItem.yy, draggableItem.color);
+        draggableItem.setCrossed(true);
+    }
+
+    if (isLeft) {
+        let newX = el.x - draggableItem.xx;
+        let heightDifference = draggableItem.yy - el.yy;
+        let nexY = el.y - heightDifference;
+        draggableItem.transform(newX, nexY, draggableItem.xx, draggableItem.yy, draggableItem.color);
+        draggableItem.setCrossed(true);
+    }
+    // console.log(el.x, el.y, el.xx, el.yy)
+    // console.log(draggableItem.x, draggableItem.y, draggableItem.xx, draggableItem.y)
 }
 
 function getMousePos(evt) {
