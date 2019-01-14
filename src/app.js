@@ -1,10 +1,20 @@
 import utils from './utils';
 
-const { getRandomColor } = utils;
+const {
+  getRandomColor,
+  eventListenerService,
+  getRandomNumberBetweenMinMax,
+  setStyle,
+} = utils;
 
 let container;
 
 const CONSTANTS = {
+  RECTANGLES_TO_GENERATE: 5,
+  RECTANGLE_MIN_WIDTH: 70,
+  RECTANGLE_MIN_HEIGHT: 45,
+  RECTANGLE_MAX_WIDTH: 400,
+  RECTANGLE_MAX_HEIGHT: 50,
   RED_COLOR: '#da3d4b',
   OFFSET_PAGE: 100,
   OFFSET_CONNECTION: 25,
@@ -36,15 +46,17 @@ function getRandomRectangle(canvas) {
     ? previousRectangle.y + previousRectangle.height
     : 0;
 
-  const maxWidth = 400;
-  const minWidth = 70;
-  const maxHeight = 120;
-  const minHeight = 45;
-
-  const positionX = canvas.width / 2.4;
+  const offsetFromCenter = 2.4;
+  const positionX = canvas.width / offsetFromCenter;
   const positionY = CONSTANTS.OFFSET_BETWEEN_RECTANGLES + previousRectangleHeight;
-  const rectangleWidth = Math.floor(Math.random() * (maxWidth - minWidth)) + minWidth;
-  const rectangleHeight = Math.floor(Math.random() * (maxHeight - minHeight)) + minHeight;
+  const rectangleWidth = getRandomNumberBetweenMinMax(
+    CONSTANTS.RECTANGLE_MIN_WIDTH,
+    CONSTANTS.RECTANGLE_MAX_WIDTH,
+  );
+  const rectangleHeight = getRandomNumberBetweenMinMax(
+    CONSTANTS.RECTANGLE_MIN_HEIGHT,
+    CONSTANTS.RECTANGLE_MAX_HEIGHT,
+  );
 
   const rectangleParams = [positionX, positionY, rectangleWidth, rectangleHeight];
   const rectangleColor = getRandomColor();
@@ -135,10 +147,14 @@ function onClickCanvas(event) {
   if (collection.length) {
     collection.forEach((el) => {
       const mousePosition = getMousePosition(event);
-      const isSimilarHorizontalPosition = mousePosition.x > el.x && mousePosition.x < el.x + el.width;
-      const isSimilarVerticalPosition = mousePosition.y > el.y && mousePosition.y < el.y + el.height;
+      const isSimilarHorizontalPosition = mousePosition.x
+        > el.x && mousePosition.x
+        < el.x + el.width;
+      const isSimilarVerticalPosition = mousePosition.y
+        > el.y && mousePosition.y
+        < el.y + el.height;
       if (isSimilarHorizontalPosition && isSimilarVerticalPosition) {
-        container.style.cursor = 'move';
+        setStyle(container, 'cursor', 'move');
         const offsetX = el.x - mousePosition.x;
         const offsetY = el.y - mousePosition.y;
 
@@ -150,46 +166,49 @@ function onClickCanvas(event) {
 }
 
 function calculateConnectionPosition(draggableItem, rectangle) {
-  let x;
-  let y;
+  const {
+    x,
+    y,
+    width,
+    height,
+  } = rectangle;
+  let xPosition;
+  let yPosition;
   let direction;
-  const isLeft = rectangle.x > draggableItem.lastDraggedPosition[0]
-        + draggableItem.lastDraggedPosition[2];
-  const isRight = rectangle.x + rectangle.width < draggableItem.lastDraggedPosition[0];
-  const isTop = draggableItem.lastDraggedPosition[1]
-        + draggableItem.lastDraggedPosition[3] < rectangle.y;
-  const isBottom = rectangle.y + rectangle.height < draggableItem.lastDraggedPosition[1];
+  const isLeft = x > draggableItem.lastDraggedPosition[0] + draggableItem.lastDraggedPosition[2];
+  const isRight = x + width < draggableItem.lastDraggedPosition[0];
+  const isTop = draggableItem.lastDraggedPosition[1] + draggableItem.lastDraggedPosition[3] < y;
+  const isBottom = y + height < draggableItem.lastDraggedPosition[1];
 
   if (isRight) {
-    const heightDifference = draggableItem.height - rectangle.height;
-    x = rectangle.x + rectangle.width;
-    y = rectangle.y - heightDifference;
+    const heightDifference = draggableItem.height - height;
+    xPosition = x + width;
+    yPosition = y - heightDifference;
     direction = true;
   }
 
   if (isLeft) {
-    const heightDifference = draggableItem.height - rectangle.height;
-    x = rectangle.x - draggableItem.width;
-    y = rectangle.y - heightDifference;
+    const heightDifference = draggableItem.height - height;
+    xPosition = x - draggableItem.width;
+    yPosition = y - heightDifference;
     direction = true;
   }
 
   if (isTop) {
-    x = rectangle.x;
-    y = rectangle.y - draggableItem.height;
+    xPosition = x;
+    yPosition = y - draggableItem.height;
     direction = true;
   }
 
   if (isBottom) {
-    x = rectangle.x;
-    y = rectangle.y + rectangle.height;
+    xPosition = x;
+    yPosition = y + height;
     direction = true;
   }
 
-
   return {
-    x,
-    y,
+    x: xPosition,
+    y: yPosition,
     direction,
     width: draggableItem.width,
     height: draggableItem.height,
@@ -226,12 +245,16 @@ function detectIsMouseInsideElement(mousePosition, rectangle) {
 }
 
 function isDraggingAllowed(potentialX, potentialY, draggableItem, event) {
-  const collection = rectangleCollection.get().filter(rectangle => JSON.stringify(rectangle) !== JSON.stringify(draggableItem));
+  const collection = rectangleCollection.get().filter(
+    rectangle => JSON.stringify(rectangle) !== JSON.stringify(draggableItem),
+  );
 
   if (collection && collection.length && event) {
     return collection.every((rectangle) => {
       const mousePosition = getMousePosition(event);
-      const isConnectionAvailable = detectAvailableConnection(mousePosition, draggableItem, rectangle);
+      const isConnectionAvailable = detectAvailableConnection(mousePosition,
+        draggableItem,
+        rectangle);
       const isMouseInsideElement = detectIsMouseInsideElement(mousePosition, rectangle);
 
       if (isMouseInsideElement) {
@@ -284,16 +307,19 @@ function onMouseUp() {
     // one click behaviour
     if (!draggableItem.lastDraggedPosition.length) {
       draggableItem.setDragProgress(false);
-      container.style.cursor = 'default';
+      setStyle(container, 'cursor', 'default');
       return;
     }
     // draggable behaviour
-    if (draggableItem.isCrossed && !draggableItem.isConnected) {
+    // if rectangle has crossed another rectangle
+    if (draggableItem.isCrossed) {
       draggableItem.transform(draggableItem.x, draggableItem.y);
+
+      // if rectangle has't crossed another rectangle but has been connected to another
     } else if (!draggableItem.isCrossed && draggableItem.isConnected) {
       draggableItem.setPosition(...draggableItem.connectedPosition);
-    } else if (draggableItem.isCrossed && draggableItem.isConnected) {
-      draggableItem.setPosition(...draggableItem.connectedPosition);
+
+      // if rectangle has been dragged to any place
     } else {
       draggableItem.setPosition(...draggableItem.lastDraggedPosition);
     }
@@ -301,17 +327,17 @@ function onMouseUp() {
     draggableItem.setDragProgress(false);
     draggableItem.setCrossed(false);
     draggableItem.setConnected(false);
-    container.style.cursor = 'default';
+    setStyle(container, 'cursor', 'default');
     collection.forEach(rectangle => rectangle.setColor());
   }
 }
 
 function setCanvasContainerSize() {
   container = document.getElementById('canvas-container');
-  container.style.width = `${window.innerWidth - CONSTANTS.OFFSET_PAGE}px`;
-  container.style.height = `${window.innerHeight - CONSTANTS.OFFSET_PAGE}px`;
-  container.style.marginTop = `${CONSTANTS.OFFSET_PAGE / 2}px`;
-  container.style.marginLeft = `${CONSTANTS.OFFSET_PAGE / 2}px`;
+  setStyle(container, 'width', `${window.innerWidth - CONSTANTS.OFFSET_PAGE}px`);
+  setStyle(container, 'height', `${window.innerHeight - CONSTANTS.OFFSET_PAGE}px`);
+  setStyle(container, 'marginTop', `${CONSTANTS.OFFSET_PAGE / 2}px`);
+  setStyle(container, 'marginLeft', `${CONSTANTS.OFFSET_PAGE / 2}px`);
 }
 
 function createCanvas() {
@@ -321,26 +347,25 @@ function createCanvas() {
   canvas.id = `canvas-container-${canvasCollection.length}`;
   canvas.width = window.innerWidth - CONSTANTS.OFFSET_PAGE;
   canvas.height = window.innerHeight - CONSTANTS.OFFSET_PAGE;
-  canvas.style.position = 'absolute';
+  setStyle(canvas, 'position', 'absolute');
   container.appendChild(canvas);
-  container.addEventListener('mousedown', onClickCanvas.bind(this));
-  container.addEventListener('mouseup', onMouseUp.bind(this));
-  container.addEventListener('mousemove', onDragMove.bind(this));
+
+  eventListenerService(container, 'mousedown', onClickCanvas.bind(this));
+  eventListenerService(container, 'mouseup', onMouseUp.bind(this));
+  eventListenerService(container, 'mousemove', onDragMove.bind(this));
 
   return canvas;
 }
 
 function generateRectangles() {
-  const rectanglesToGenerate = 5;
-
-  for (let i = 0; i < rectanglesToGenerate; i += 1) {
+  for (let i = 0; i < CONSTANTS.RECTANGLES_TO_GENERATE; i += 1) {
     const canvas = createCanvas();
     const ctx = canvas.getContext('2d');
     showRandomRectangle(canvas, ctx);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+eventListenerService(document, 'DOMContentLoaded', () => {
   setCanvasContainerSize();
   generateRectangles();
 });
