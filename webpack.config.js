@@ -31,7 +31,7 @@ const config = {
             exclude: /node_modules/,
             loader: "eslint-loader",
             options: {
-                "indent": ["error", "tab"],
+                "indent": ["error", 4, {"SwitchCase": 1}],
                 "trailing-comma": [true, {"multiline": "always", "singleline": "never"}],
                 "rules": {
                     "import/prefer-default-export": "off"
