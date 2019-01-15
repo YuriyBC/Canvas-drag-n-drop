@@ -89,7 +89,9 @@ function onDragMove(container, event) {
   if (draggableItem) {
     const x = event.pageX - container.offsetLeft - draggableItem.mouseOffset[0];
     const y = event.pageY - container.offsetTop - draggableItem.mouseOffset[1];
-    if (isDraggingAllowed(x, y, draggableItem, event, container)) draggableItem.transform(x, y);
+    if (isDraggingAllowed(x, y, draggableItem, event, container)) {
+      requestAnimationFrame(draggableItem.transform(x, y));
+    }
   }
 }
 
