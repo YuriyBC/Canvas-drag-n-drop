@@ -1,11 +1,10 @@
-const {
+import {
     getRandomColor,
     getRandomNumberBetweenMinMax,
-} = require('../utils/utils');
+} from '../utils/utils';
+import { constants } from './constsnts';
 
-const { constants } = require('./constsnts');
-
-const rectangleCollection = {
+export const rectangleCollection = {
     collection: [],
     add(rectangle) {
         this.collection.push(rectangle);
@@ -39,9 +38,4 @@ const rectangleCollection = {
             rectangleColor,
         };
     },
-};
-
-
-module.exports = {
-    rectangleCollection,
 };

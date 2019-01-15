@@ -1,12 +1,12 @@
-const { constants } = require('./constsnts');
-const { rectangleCollection } = require('./rectangleCollection');
+import { constants } from './constsnts';
+import { rectangleCollection } from './rectangleCollection';
 
-function detectIsMouseInsideElement(mousePosition, rectangle) {
+export function detectIsMouseInsideElement(mousePosition, rectangle) {
     return mousePosition.x > rectangle.x && mousePosition.x < rectangle.x + rectangle.width
         && mousePosition.y > rectangle.y && mousePosition.y < rectangle.y + rectangle.height;
 }
 
-function getMousePosition(event, container) {
+export function getMousePosition(event, container) {
     const textRectangle = container.getBoundingClientRect();
     return {
         x: event.clientX - textRectangle.left,
@@ -14,16 +14,16 @@ function getMousePosition(event, container) {
     };
 }
 
-function calculateConnectionPosition(draggableItem, rectangle) {
+export function calculateConnectionPosition(draggableItem, rectangle) {
     if (draggableItem && rectangle) {
         if (draggableItem.lastDraggedPosition
-        && draggableItem.lastDraggedPosition.length
-        && draggableItem.height
-        && draggableItem.width
-        && rectangle.x
-        && rectangle.y
-        && rectangle.width
-        && rectangle.height) {
+            && draggableItem.lastDraggedPosition.length
+            && draggableItem.height
+            && draggableItem.width
+            && rectangle.x
+            && rectangle.y
+            && rectangle.width
+            && rectangle.height) {
             const {
                 x,
                 y,
@@ -85,7 +85,7 @@ function calculateConnectionPosition(draggableItem, rectangle) {
     };
 }
 
-function detectAvailableConnection(mousePosition, draggableItem, rectangle) {
+export function detectAvailableConnection(mousePosition, draggableItem, rectangle) {
     if (mousePosition && draggableItem && rectangle) {
         if (mousePosition.x
             && mousePosition.y
@@ -120,7 +120,7 @@ function detectAvailableConnection(mousePosition, draggableItem, rectangle) {
     return false;
 }
 
-function isDraggingAllowed(potentialX, potentialY, draggableItem, mousePosition) {
+export function isDraggingAllowed(potentialX, potentialY, draggableItem, mousePosition) {
     const collection = rectangleCollection.get().filter(
         rectangle => JSON.stringify(rectangle) !== JSON.stringify(draggableItem),
     );
@@ -163,10 +163,3 @@ function isDraggingAllowed(potentialX, potentialY, draggableItem, mousePosition)
     }
     return false;
 }
-
-module.exports = {
-    getMousePosition,
-    calculateConnectionPosition,
-    detectAvailableConnection,
-    isDraggingAllowed,
-};

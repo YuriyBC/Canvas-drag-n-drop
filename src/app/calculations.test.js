@@ -1,18 +1,23 @@
-const calculations = require('./calculations');
+import {
+    detectAvailableConnection,
+    isDraggingAllowed,
+    calculateConnectionPosition,
+} from './calculations';
+
 
 test('detectAvailableConnection returns boolean', () => {
-    expect(calculations.detectAvailableConnection()).toBeFalsy();
-    expect(calculations.detectAvailableConnection(null, {})).toBeFalsy();
-    expect(calculations.detectAvailableConnection(0, null, undefined)).toBeFalsy();
-    expect(calculations.detectAvailableConnection(450, {}, 1000)).toBeFalsy();
-    expect(calculations.detectAvailableConnection({}, {}, {})).toBeFalsy();
+    expect(detectAvailableConnection()).toBeFalsy();
+    expect(detectAvailableConnection(null, {})).toBeFalsy();
+    expect(detectAvailableConnection(0, null, undefined)).toBeFalsy();
+    expect(detectAvailableConnection(450, {}, 1000)).toBeFalsy();
+    expect(detectAvailableConnection({}, {}, {})).toBeFalsy();
 });
 
 test('isDraggingAllowed returns boolean', () => {
-    expect(calculations.isDraggingAllowed()).toBeFalsy();
-    expect(calculations.isDraggingAllowed(null, null, null, null, null)).toBeFalsy();
-    expect(calculations.isDraggingAllowed({}, {}, {})).toBeFalsy();
-    expect(calculations.isDraggingAllowed({}, {}, {})).toBeFalsy();
+    expect(isDraggingAllowed()).toBeFalsy();
+    expect(isDraggingAllowed(null, null, null, null, null)).toBeFalsy();
+    expect(isDraggingAllowed({}, {}, {})).toBeFalsy();
+    expect(isDraggingAllowed({}, {}, {})).toBeFalsy();
 });
 
 test('calculateConnectionPosition returns object', () => {
@@ -23,7 +28,7 @@ test('calculateConnectionPosition returns object', () => {
         x: null,
         y: null,
     };
-    expect(calculations.calculateConnectionPosition()).toEqual(falseObject);
-    expect(calculations.calculateConnectionPosition(null, null)).toEqual(falseObject);
-    expect(calculations.calculateConnectionPosition({}, {})).toEqual(falseObject);
+    expect(calculateConnectionPosition()).toEqual(falseObject);
+    expect(calculateConnectionPosition(null, null)).toEqual(falseObject);
+    expect(calculateConnectionPosition({}, {})).toEqual(falseObject);
 });

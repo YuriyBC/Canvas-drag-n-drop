@@ -1,15 +1,14 @@
-const { Rectangle } = require('./models/rectangleModel');
-const { rectangleCollection } = require('./rectangleCollection');
-const { constants } = require('./constsnts');
-const {
+import { Rectangle } from './models/rectangleModel';
+import { rectangleCollection } from './rectangleCollection';
+import { constants } from './constsnts';
+import {
     eventListenerService,
     setStyle,
-} = require('../utils/utils');
-
-const {
+} from '../utils/utils';
+import {
     isDraggingAllowed,
     getMousePosition,
-} = require('./calculations');
+} from './calculations';
 
 function showRandomRectangle(canvas, ctx) {
     const { rectangleParams, rectangleColor } = rectangleCollection.getRandomRectangle();

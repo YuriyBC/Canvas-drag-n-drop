@@ -19,12 +19,13 @@ const config = {
         rules: [{
             test: /\.html$/,
             use: 'html-loader'
-        }, {
+        },
+            {
             test: /\.js$/,
             exclude: /node_modules/,
-            use: [{
-                loader: 'babel-loader'
-            }]
+            use: {
+                loader: "babel-loader"
+            }
         },
         {
             test: /\.js$/,

@@ -1,4 +1,4 @@
-const constants = {
+export const constants = {
     RECTANGLES_TO_GENERATE: 5,
     RECTANGLE_MIN_WIDTH: 70,
     RECTANGLE_MIN_HEIGHT: 45,
@@ -9,8 +9,4 @@ const constants = {
     OFFSET_PAGE: 100,
     OFFSET_CONNECTION: 25,
     OFFSET_BETWEEN_RECTANGLES: 70,
-};
-
-module.exports = {
-    constants,
 };
