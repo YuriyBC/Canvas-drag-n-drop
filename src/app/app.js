@@ -90,7 +90,7 @@ function onDragMove(container, event) {
         const x = event.pageX - container.offsetLeft - draggableItem.mouseOffset[0];
         const y = event.pageY - container.offsetTop - draggableItem.mouseOffset[1];
         if (isDraggingAllowed(x, y, draggableItem, event, container)) {
-            requestAnimationFrame(() => draggableItem.transform(x, y));
+            draggableItem.transform(x, y);
         }
     }
 }
