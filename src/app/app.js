@@ -1,51 +1,18 @@
-import { constants } from './constsnts';
-import { Rectangle } from './models/rectangleModel';
-
-import {
-    getRandomColor,
+const { Rectangle } = require('./models/rectangleModel');
+const { rectangleCollection } = require('./rectangleCollection');
+const { constants } = require('./constsnts');
+const {
     eventListenerService,
-    getRandomNumberBetweenMinMax,
     setStyle,
-} from '../utils/utils';
+} = require('../utils/utils');
 
-import {
+const {
     isDraggingAllowed,
     getMousePosition,
-} from './calculations';
-
-import {
-    rectangleCollection,
-} from './rectangleCollections';
-
-function getRandomRectangle() {
-    const rectanglesQuantity = [...rectangleCollection.get()].length;
-    const previousRectangle = [...rectangleCollection.get()][rectanglesQuantity - 1];
-    const previousRectangleHeight = previousRectangle
-        ? previousRectangle.y + previousRectangle.height
-        : 0;
-
-    const positionX = constants.CONTAINER_PADDING;
-    const positionY = constants.OFFSET_BETWEEN_RECTANGLES + previousRectangleHeight;
-    const rectangleWidth = getRandomNumberBetweenMinMax(
-        constants.RECTANGLE_MIN_WIDTH,
-        constants.RECTANGLE_MAX_WIDTH,
-    );
-    const rectangleHeight = getRandomNumberBetweenMinMax(
-        constants.RECTANGLE_MIN_HEIGHT,
-        constants.RECTANGLE_MAX_HEIGHT,
-    );
-
-    const rectangleParams = [positionX, positionY, rectangleWidth, rectangleHeight];
-    const rectangleColor = getRandomColor();
-
-    return {
-        rectangleParams,
-        rectangleColor,
-    };
-}
+} = require('./calculations');
 
 function showRandomRectangle(canvas, ctx) {
-    const { rectangleParams, rectangleColor } = getRandomRectangle();
+    const { rectangleParams, rectangleColor } = rectangleCollection.getRandomRectangle();
 
     const rectangle = new Rectangle(
         rectangleParams[0],
@@ -89,7 +56,8 @@ function onDragMove(container, event) {
     if (draggableItem) {
         const x = event.pageX - container.offsetLeft - draggableItem.mouseOffset[0];
         const y = event.pageY - container.offsetTop - draggableItem.mouseOffset[1];
-        if (isDraggingAllowed(x, y, draggableItem, event, container)) {
+        const mousePosition = getMousePosition(event, container);
+        if (isDraggingAllowed(x, y, draggableItem, mousePosition)) {
             draggableItem.transform(x, y);
         }
     }

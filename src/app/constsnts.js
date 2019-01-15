@@ -11,6 +11,6 @@ const constants = {
     OFFSET_BETWEEN_RECTANGLES: 70,
 };
 
-export {
+module.exports = {
     constants,
 };

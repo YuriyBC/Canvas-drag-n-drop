@@ -1,0 +1,12 @@
+{
+  "jest": {
+    "transformIgnorePatterns": [
+      "/node_modules/(?!test-component).+\\.js$"
+    ]
+  },
+  "verbose": true,
+  "transform": {
+    "^.+\\.js$": "babel-jest",
+    "^.+\\.jsx$": "babel-jest"
+  }
+}
