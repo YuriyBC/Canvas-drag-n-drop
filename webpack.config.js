@@ -9,7 +9,7 @@ const distPath = path.join(__dirname, '/public');
 
 const config = {
     entry: {
-        main: './src/app.js'
+        main: './src/app/app.js'
     },
     output: {
         filename: 'bundle.js',
@@ -32,7 +32,10 @@ const config = {
             loader: "eslint-loader",
             options: {
                 "indent": ["error", "tab"],
-                "trailing-comma": [true, {"multiline": "always", "singleline": "never"}]
+                "trailing-comma": [true, {"multiline": "always", "singleline": "never"}],
+                "rules": {
+                    "import/prefer-default-export": "off"
+                }
             }
         }]
     },
